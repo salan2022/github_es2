@@ -1,0 +1,40 @@
+name: Test with Elasticsearch 2.x
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      elasticsearch:
+        image: elasticsearch:2.4.6
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+        options: >-
+          --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Wait for Elasticsearch to be ready
+      run: |
+        for i in {1..30}; do
+          if curl -s http://localhost:9200; then
+            echo "Elasticsearch is up!"
+            break
+          fi
+          echo "Waiting for Elasticsearch..."
+          sleep 5
+        done
+    
+    - name: Run tests
+      run: |
+        # Your test commands here
+        echo "Running tests against Elasticsearch 2.4.6"
+        curl http://localhost:9200
